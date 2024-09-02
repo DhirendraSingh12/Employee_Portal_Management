@@ -64,4 +64,13 @@ public class EmailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+
+    public void sendEmployeeCredentials(String to, String employeeId, String rawPassword) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Your Employee Account Credentials");
+        message.setText("Your Employee ID: " + employeeId + "\nYour Password: " + rawPassword);
+
+        mailSender.send(message);
+    }
 }

@@ -31,7 +31,7 @@ public class RoleService {
 
         if (userOptional.isPresent() && role != null) {
             User user = userOptional.get();
-            user.getRoles().add(role); // Assuming `roles` is a collection of Role objects
+          //  user.getRoles().add(role); // Assuming `roles` is a collection of Role objects
             userRepository.save(user);
         } else {
             // Handle error: either user or role was not found

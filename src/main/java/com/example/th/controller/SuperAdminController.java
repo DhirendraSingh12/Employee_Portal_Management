@@ -3,6 +3,12 @@ package com.example.th.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,16 +42,38 @@ public class SuperAdminController {
     @Autowired
     private RoleService roleService;
     
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginSuperAdmin(@RequestParam String username, @RequestParam String password) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return ResponseEntity.ok("SuperAdmin logged in successfully");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
+    }
+    
     @GetMapping("/employees")
     @ResponseBody
     public List<Employee> getAllEmployees() {
         return employeeService.getAllEmployees();
     }
 
-    @PostMapping("/employees")
-    @ResponseBody
-    public Employee createEmployee(@RequestBody Employee employee) {
-        return employeeService.createEmployee(employee);
+    @PostMapping("/add")
+    public ResponseEntity<Employee> addEmployee(@RequestBody Employee employee) {
+        Employee savedEmployee = employeeService.createEmployee(employee);
+        return ResponseEntity.ok(savedEmployee);
+    }
+
+    @PostMapping("/bulk-add")
+    public ResponseEntity<List<Employee>> addEmployeesInBulk(@RequestBody List<Employee> employees) {
+        List<Employee> savedEmployees = employeeService.addEmployeesInBulk(employees);
+        return ResponseEntity.ok(savedEmployees);
     }
 
     @GetMapping("/employees/{employeeId}")

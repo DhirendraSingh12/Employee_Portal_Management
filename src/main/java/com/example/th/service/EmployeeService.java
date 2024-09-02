@@ -2,6 +2,8 @@ package com.example.th.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +26,9 @@ public class EmployeeService {
     private EmployeeIdGenerator employeeIdGenerator;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    
+    private static final String EMPLOYEE_ID_PREFIX = "HFX";
+    private static final int ID_PADDING_SIZE = 4;
 
     public Employee createEmployee(Employee employee) {
         String employeeId = employeeIdGenerator.generate();
@@ -64,5 +69,39 @@ public class EmployeeService {
         } else {
             throw new RuntimeException("Employee not found with ID: " + employeeId);
         }
+    }
+
+    public List<Employee> addEmployeesInBulk(List<Employee> employees) {
+        // Get the current maximum employee ID number
+        int currentMaxIdNumber = employeeRepository.findMaxEmployeeIdNumber(EMPLOYEE_ID_PREFIX);
+
+        // Generate unique employee IDs and encrypt passwords
+        List<Employee> processedEmployees = IntStream.range(0, employees.size())
+                .mapToObj(i -> {
+                    Employee employee = employees.get(i);
+
+                    // Generate employee ID
+                    String employeeId = generateEmployeeId(currentMaxIdNumber + i + 1);
+                    employee.setEmployeeId(employeeId);
+
+                    // Encrypt the password
+                    String encodedPassword = passwordEncoder.encode(employee.getPassword());
+                    employee.setPassword(encodedPassword);
+
+                    // Send email with employee ID and raw password
+                    emailService.sendEmployeeCredentials(employee.getEmail(), employeeId, employee.getPassword());
+
+                    return employee;
+                })
+                .collect(Collectors.toList());
+
+        // Save employees in the database
+        return employeeRepository.saveAll(processedEmployees);
+    }
+
+    private String generateEmployeeId(int idNumber) {
+        // Pads the number with leading zeros, e.g., 1 -> 0001
+        String paddedNumber = String.format("%0" + ID_PADDING_SIZE + "d", idNumber);
+        return EMPLOYEE_ID_PREFIX + paddedNumber;
     }
 }

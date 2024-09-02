@@ -5,10 +5,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "roles")
 public class Role {
+
     @Id
     private String id;
-    private String name;
-    private String description;
+    private String name; // E.g., ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_EMPLOYEE
     
     
 	public String getId() {
@@ -23,19 +23,6 @@ public class Role {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	
-	
-	@Override
-	public String toString() {
-		return "Role [id=" + id + ", name=" + name + ", description=" + description + "]";
-	}
-    
 	
     
 }

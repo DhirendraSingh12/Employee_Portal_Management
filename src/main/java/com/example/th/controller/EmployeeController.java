@@ -17,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.example.th.model.Documents;
 import com.example.th.model.Employee;
@@ -34,32 +35,22 @@ public class EmployeeController {
     
     @Autowired
     private DocumentService documentService;
-    
-    private final AuthenticationManager authenticationManager;
 
-    public EmployeeController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
-    }
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Employee loginRequest) {
+    public ResponseEntity<?> loginEmployee(@RequestParam String employeeId, @RequestParam String password) {
         try {
-            // Authenticate the user
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmployeeId(), loginRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(employeeId, password)
             );
-
-            // Check if authentication is successful
-            if (authentication.isAuthenticated()) {
-                return ResponseEntity.ok("Login successful");
-            } else {
-                return ResponseEntity.status(401).body("Invalid credentials");
-            }
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return ResponseEntity.ok("Employee logged in successfully");
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
     }
-
     @PostMapping("/documents/upload")
     public Documents uploadDocument(@RequestBody Documents document) {
         return documentService.uploadDocument(document);
